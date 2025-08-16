@@ -1,16 +1,23 @@
 package com.bulish;
 
-import com.bulish.dao.HibernateUtil;
+import com.bulish.config.HibernateUtil;
 import com.bulish.dao.UserDao;
-import com.bulish.model.User;
+import com.bulish.dao.UserDaoImpl;
+import com.bulish.dto.UserDto;
+import com.bulish.exception.UserNotFoundException;
+import com.bulish.mapper.UserMapper;
+import com.bulish.service.UserService;
+import com.bulish.service.UserServiceImpl;
 
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.Scanner;
 
 public class Main {
 
-    private static final UserDao userDao = new UserDao();
+    private static final UserDao userDao = new UserDaoImpl(HibernateUtil.getSessionFactory());
+    private static final UserMapper userMapper = new UserMapper();
+    private static final UserService userService = new UserServiceImpl(userDao, userMapper);
     private static final Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
@@ -44,23 +51,23 @@ public class Main {
         try {
             Long id = Long.parseLong(scanner.nextLine());
 
-            if (checkIfUserExistsById(id).isEmpty()) return;
+            if (checkIfUserExistsById(id) == null) return;
 
-            userDao.deleteById(id);
+            userService.deleteById(id);
             System.out.println("User deleted successfully");
         } catch (Exception e) {
             System.err.println("Error while deleteUser: " + e.getMessage());
         }
     }
+
     private static void updateUser() {
         System.out.print("Enter user ID to update: ");
 
         try {
             Long id = Long.parseLong(scanner.nextLine());
-            Optional<User> optionalUser = checkIfUserExistsById(id);
-            if (optionalUser.isEmpty()) return;
+            UserDto user = checkIfUserExistsById(id);
+            if (user == null) return;
 
-            User user = optionalUser.get();
             System.out.println("Current user: " + user);
 
             System.out.print("Enter new name or leave blank to keep the same: ");
@@ -75,7 +82,7 @@ public class Main {
             String age = scanner.nextLine();
             if (!age.isBlank()) user.setAge(Integer.parseInt(age));
 
-            userDao.update(user);
+            userService.update(user);
             System.out.println("User updated successfully");
         } catch (Exception e) {
             System.err.println("Error while updateUser: " + e.getMessage());
@@ -84,7 +91,7 @@ public class Main {
 
     private static void findAllUsers() {
         try {
-            List<User> users = userDao.findAll();
+            List<UserDto> users = userService.findAll();
             if (users.isEmpty()) {
                 System.out.println("No users found");
             } else {
@@ -99,11 +106,9 @@ public class Main {
         System.out.print("Enter id: ");
 
         try {
-          Long id = Long.parseLong(scanner.nextLine());
-          Optional<User> user = userDao.findById(id);
-          user.ifPresentOrElse(
-                  System.out::println,
-                  () -> System.out.println("User not found with id: " + id));
+            Long id = Long.parseLong(scanner.nextLine());
+            UserDto user = userService.findById(id);
+            System.out.println(user);
         } catch (Exception e) {
             System.err.println("Error while findUserById : " + e.getMessage());
         }
@@ -111,17 +116,22 @@ public class Main {
 
     private static void createUser() {
         try {
-        System.out.print("Enter name: ");
-        String name = scanner.nextLine();
+            System.out.print("Enter name: ");
+            String name = scanner.nextLine();
 
-        System.out.print("Enter email: ");
-        String email = scanner.nextLine();
+            System.out.print("Enter email: ");
+            String email = scanner.nextLine();
 
-        System.out.print("Enter age: ");
-        int age = Integer.parseInt(scanner.nextLine());
+            int age = askAge();
 
-        Long id = userDao.save(new User(name, email, age));
-        System.out.println("User created with ID: " + id);
+            Long id = userService.save(UserDto.builder()
+                    .name(name)
+                    .email(email)
+                    .age(age)
+                    .createdAt(LocalDateTime.now())
+                    .build());
+
+            System.out.println("User created with ID: " + id);
         } catch (Exception e) {
             System.err.println("Error creating user: " + e.getMessage());
         }
@@ -137,11 +147,25 @@ public class Main {
         System.out.println("Choose operation number");
     }
 
-    private static Optional<User> checkIfUserExistsById(Long id) {
-        Optional<User> optionalUser = userDao.findById(id);
-        if (optionalUser.isEmpty()) {
+    private static UserDto checkIfUserExistsById(Long id) {
+        UserDto userDto = null;
+        try {
+            userDto = userService.findById(id);
+        } catch (UserNotFoundException e) {
             System.out.println("User not found!");
         }
-       return optionalUser;
+        return userDto;
     }
+
+    private static int askAge() {
+        while (true) {
+            System.out.print("Enter age: ");
+            try {
+                return Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid age, enter number format");
+            }
+        }
+    }
+
 }

@@ -1,7 +1,8 @@
-package com.bulish.dao;
+package com.bulish.config;
 
+import com.bulish.model.User;
+import lombok.Getter;
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -9,27 +10,26 @@ import org.hibernate.cfg.Configuration;
 
 public class HibernateUtil {
 
-    private static SessionFactory sessionFactory;
+    @Getter
+    private static final SessionFactory sessionFactory = buildSessionFactory();
 
-    static {
+    private static SessionFactory buildSessionFactory() {
         try {
             Configuration configuration = new Configuration().configure();
             StandardServiceRegistry registry = new StandardServiceRegistryBuilder()
                     .applySettings(configuration.getProperties())
                     .build();
-            Metadata metadata = new MetadataSources(registry)
-                    .addAnnotatedClass(com.bulish.model.User.class)
-                    .getMetadataBuilder()
-                    .build();
-            sessionFactory = metadata.getSessionFactoryBuilder().build();
-        } catch (Exception e) {
-            System.err.println("SessionFactory creation failed: " + e);
-            throw new ExceptionInInitializerError(e);
-        }
-    }
 
-    public static SessionFactory getSessionFactory() {
-        return sessionFactory;
+            return new MetadataSources(registry)
+                    .addAnnotatedClass(User.class)
+                    .getMetadataBuilder()
+                    .build()
+                    .getSessionFactoryBuilder()
+                    .build();
+        } catch (Throwable ex) {
+            System.err.println("SessionFactory creation failed." + ex);
+            throw new ExceptionInInitializerError(ex);
+        }
     }
 
     public static void shutdown() {
