@@ -15,12 +15,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -71,19 +73,24 @@ class UserServiceImplTest {
     @DisplayName("findById - OK")
     void findByIdOk() {
         Long userId = TestUserFactory.USER_ID;
-        User user = TestUserFactory.createUser(userId);
-        UserDto userDto = TestUserFactory.createUserDto(userId);
+        LocalDateTime fixedTime = LocalDateTime.now();
+
+        User user = TestUserFactory.createUser(fixedTime, userId);
+        UserDto userDto = TestUserFactory.createUserDto(fixedTime, userId);
         when(userDaoImpl.findById(userId)).thenReturn(Optional.of(user));
         when(userMapper.toDto(user)).thenReturn(userDto);
 
         UserDto foundUser = userService.findById(userId);
 
-        assertThat(foundUser).isNotNull();
-        assertThat(foundUser.getAge()).isEqualTo(userDto.getAge());
-        assertThat(foundUser.getId()).isEqualTo(userDto.getId());
-        assertThat(foundUser.getName()).isEqualTo(userDto.getName());
-        assertThat(foundUser.getCreatedAt()).isEqualTo(userDto.getCreatedAt());
-        assertThat(foundUser.getEmail()).isEqualTo(userDto.getEmail());
+        assertAll("found user fields",
+                () -> assertNotNull(foundUser),
+                () -> assertEquals(foundUser.getCreatedAt(), user.getCreatedAt()),
+                () -> assertEquals(foundUser.getAge(), user.getAge()),
+                () -> assertEquals(foundUser.getId(), user.getId()),
+                () -> assertEquals(foundUser.getName(), user.getName()),
+                () -> assertEquals(foundUser.getEmail(), user.getEmail())
+        );
+
         verify(userDaoImpl).findById(userId);
         verify(userMapper).toDto(user);
         verifyNoMoreInteractions(userDaoImpl);

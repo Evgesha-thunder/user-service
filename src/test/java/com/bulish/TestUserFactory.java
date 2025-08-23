@@ -21,6 +21,16 @@ public class TestUserFactory {
                 .build();
     }
 
+    public static UserDto createUserDto(LocalDateTime dateTime, Long id) {
+        return UserDto.builder()
+                .id(id)
+                .name("Test")
+                .email("test@mail.com")
+                .createdAt(dateTime)
+                .age(22)
+                .build();
+    }
+
     public static UserDto createUserDto() {
         return createUserDto(null);
     }
@@ -31,6 +41,16 @@ public class TestUserFactory {
                 .name("Test")
                 .email("test@mail.com")
                 .createdAt(LocalDateTime.now())
+                .age(22)
+                .build();
+    }
+
+    public static User createUser(LocalDateTime dateTime, Long id) {
+        return User.builder()
+                .id(id)
+                .name("Test")
+                .email("test@mail.com")
+                .createdAt(dateTime)
                 .age(22)
                 .build();
     }

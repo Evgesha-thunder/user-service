@@ -16,6 +16,8 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -58,11 +60,13 @@ class UserDaoImplIT {
 
         User createdUser = optionalUser.get();
 
-        assertThat(createdUser.getCreatedAt()).isEqualTo(user.getCreatedAt());
-        assertThat(createdUser.getAge()).isEqualTo(user.getAge());
-        assertThat(createdUser.getId()).isEqualTo(user.getId());
-        assertThat(createdUser.getName()).isEqualTo(user.getName());
-        assertThat(createdUser.getEmail()).isEqualTo(user.getEmail());
+        assertAll("created user fields",
+                () -> assertEquals(createdUser.getCreatedAt(), user.getCreatedAt()),
+                () -> assertEquals(createdUser.getAge(), user.getAge()),
+                () -> assertEquals(createdUser.getId(), user.getId()),
+                () -> assertEquals(createdUser.getName(), user.getName()),
+                () -> assertEquals(createdUser.getEmail(), user.getEmail())
+        );
     }
 
     @Test
@@ -81,6 +85,7 @@ class UserDaoImplIT {
                 .contains("Error while saving user");
 
         List<User> users = userDaoImpl.findAll();
+
         assertThat(users)
                 .hasSize(1)
                 .extracting(User::getEmail)
@@ -98,11 +103,13 @@ class UserDaoImplIT {
 
         User foundUser = optionalUser.get();
 
-        assertThat(foundUser.getCreatedAt()).isEqualTo(user.getCreatedAt());
-        assertThat(foundUser.getAge()).isEqualTo(user.getAge());
-        assertThat(foundUser.getId()).isEqualTo(user.getId());
-        assertThat(foundUser.getName()).isEqualTo(user.getName());
-        assertThat(foundUser.getEmail()).isEqualTo(user.getEmail());
+        assertAll("found user fields",
+                () -> assertEquals(foundUser.getCreatedAt(), user.getCreatedAt()),
+                () -> assertEquals(foundUser.getAge(), user.getAge()),
+                () -> assertEquals(foundUser.getId(), user.getId()),
+                () -> assertEquals(foundUser.getName(), user.getName()),
+                () -> assertEquals(foundUser.getEmail(), user.getEmail())
+        );
     }
 
     @Test
@@ -123,11 +130,13 @@ class UserDaoImplIT {
 
         User foundUser = optionalUser.get();
 
-        assertThat(foundUser.getCreatedAt()).isEqualTo(user.getCreatedAt());
-        assertThat(foundUser.getAge()).isEqualTo(user.getAge());
-        assertThat(foundUser.getId()).isEqualTo(user.getId());
-        assertThat(foundUser.getName()).isEqualTo(user.getName());
-        assertThat(foundUser.getEmail()).isEqualTo(user.getEmail());
+        assertAll("found user fields",
+                () -> assertEquals(foundUser.getCreatedAt(), user.getCreatedAt()),
+                () -> assertEquals(foundUser.getAge(), user.getAge()),
+                () -> assertEquals(foundUser.getId(), user.getId()),
+                () -> assertEquals(foundUser.getName(), user.getName()),
+                () -> assertEquals(foundUser.getEmail(), user.getEmail())
+        );
     }
 
     @Test
