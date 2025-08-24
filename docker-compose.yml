@@ -1,29 +1,37 @@
 version: '3.8'
 
 services:
-  app:
+  user_service:
     build: .
+    container_name: user_service
+    restart: always
+    ports:
+      - "8080:8080"
     depends_on:
-      db:
+      user_service_db:
         condition: service_healthy
     environment:
-      DB_URL: db
-      DB_USER: postgres
-      DB_PASSWORD: postgres
+      DATASOURCE_URL: jdbc:postgresql://user_service_db:5432/user_service
+      DATASOURCE_USERNAME: evgenia
+      DATASOURCE_PASSWORD: aston24
 
-  db:
+  user_service_db:
     image: postgres:15
+    container_name: user_service_db
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: userdb
+      POSTGRES_USER: evgenia
+      POSTGRES_PASSWORD: aston24
+      POSTGRES_DB: user_service
     volumes:
       - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d userdb"]
-      interval: 5s
+      test: [ "CMD-SHELL", "pg_isready -U evgenia -d user_service" ]
+      interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 5
+      start_period: 30s
 
 volumes:
   pgdata:

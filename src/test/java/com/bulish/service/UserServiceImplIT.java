@@ -27,7 +27,7 @@ public class UserServiceImplIT {
 
     @Container
     static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:15-alpine")
-            .withDatabaseName("testusers")
+            .withDatabaseName("testdb")
             .withUsername("test")
             .withPassword("test");
 

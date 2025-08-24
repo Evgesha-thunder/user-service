@@ -5,13 +5,10 @@ COPY pom.xml /app/pom.xml
 COPY src /app/src
 RUN mvn clean package -DskipTests
 
-FROM openjdk:21-slim-bullseye
+FROM eclipse-temurin:21-jre-alpine
 
-RUN apt-get update && apt-get install -y postgresql-client
 WORKDIR /app
 
 COPY --from=build /app/target/user-service-*.jar /app/app.jar
-COPY wait-for-postgres.sh /app/wait-for-postgres.sh
-RUN chmod +x /app/wait-for-postgres.sh
-
-ENTRYPOINT ["/app/wait-for-postgres.sh", "java", "-jar", "/app/app.jar"]
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
