@@ -5,8 +5,12 @@
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
-
-    <root level="INFO">
+    <logger name="com.bulish" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+    <logger name="org.springframework" level="INFO"/>
+    <logger name="org.hibernate" level="INFO"/>
+    <root level="WARN">
         <appender-ref ref="CONSOLE"/>
     </root>
 </configuration>
