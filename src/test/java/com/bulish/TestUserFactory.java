@@ -69,13 +69,13 @@ public class TestUserFactory {
                 .build();
     }
 
-    public static User createUserWithEmail(String email) {
-        return User.builder()
+    public static UserDto createUserDtoWithParam(String name, String email, Integer age) {
+        return UserDto.builder()
                 .id(null)
-                .name("Test")
+                .name(name)
                 .email(email)
                 .createdAt(LocalDateTime.now())
-                .age(22)
+                .age(age)
                 .build();
     }
 
@@ -86,6 +86,24 @@ public class TestUserFactory {
                 .email(email)
                 .createdAt(LocalDateTime.now())
                 .age(22)
+                .build();
+    }
+
+    public static UserDto createUserDtoWithAge(Integer age) {
+        return UserDto.builder()
+                .name("test with age")
+                .email("example@mail.com")
+                .createdAt(LocalDateTime.now())
+                .age(age)
+                .build();
+    }
+
+    public static UserDto createUserDtoWithName(String name) {
+        return UserDto.builder()
+                .name(name)
+                .email("example@mail.com")
+                .createdAt(LocalDateTime.now())
+                .age(34)
                 .build();
     }
 

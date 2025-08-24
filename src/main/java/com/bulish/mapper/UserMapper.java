@@ -9,6 +9,7 @@ public class UserMapper {
 
     public User toEntity(UserDto userDto) {
         return User.builder()
+                .id(userDto.getId())
                 .age(userDto.getAge())
                 .name(userDto.getName())
                 .email(userDto.getEmail())
@@ -18,6 +19,7 @@ public class UserMapper {
 
     public UserDto toDto(User user) {
         return UserDto.builder()
+                .id(user.getId())
                 .age(user.getAge())
                 .name(user.getName())
                 .email(user.getEmail())

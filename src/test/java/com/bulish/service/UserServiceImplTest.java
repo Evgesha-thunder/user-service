@@ -1,22 +1,21 @@
 package com.bulish.service;
 
 import com.bulish.TestUserFactory;
-import com.bulish.dao.UserDaoImpl;
 import com.bulish.dto.UserDto;
-import com.bulish.exception.EmailAlreadyExistsException;
-import com.bulish.exception.UserNotFoundException;
+import com.bulish.exceptions.EmailAlreadyExistsException;
+import com.bulish.exceptions.UserNotFoundException;
 import com.bulish.mapper.UserMapper;
 import com.bulish.model.User;
+import com.bulish.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,7 +28,7 @@ import static org.mockito.Mockito.*;
 class UserServiceImplTest {
 
     @Mock
-    private UserDaoImpl userDaoImpl;
+    private UserRepository userRepository;
 
     @Mock
     private UserMapper userMapper;
@@ -37,21 +36,30 @@ class UserServiceImplTest {
     @InjectMocks
     private UserServiceImpl userService;
 
-    @DisplayName("save new user - OK")
     @Test
+    @DisplayName("save new user - OK")
     void saveOk() {
         User user = TestUserFactory.createUser();
         UserDto userDto = TestUserFactory.createUserDto();
-        Long userId = TestUserFactory.USER_ID;
+
+        when(userRepository.findByEmail(userDto.getEmail())).thenReturn(Optional.empty());
         when(userMapper.toEntity(userDto)).thenReturn(user);
-        when(userDaoImpl.save(user)).thenReturn(userId);
+        when(userRepository.save(user)).thenReturn(user);
+        when(userMapper.toDto(user)).thenReturn(userDto);
 
-        Long idCreatedUser = userService.save(userDto);
+        UserDto createdUser = userService.saveNewUser(userDto);
 
-        assertThat(idCreatedUser).isGreaterThan(0);
-        verify(userDaoImpl).findByEmail(userDto.getEmail());
-        verify(userDaoImpl).save(user);
-        verifyNoMoreInteractions(userDaoImpl);
+        assertAll("created user",
+                () -> assertNotNull(createdUser),
+                () -> assertEquals(createdUser.getEmail(), userDto.getEmail()),
+                () -> assertEquals(createdUser.getName(), userDto.getName()),
+                () -> assertEquals(createdUser.getAge(), userDto.getAge())
+                );
+
+        verify(userRepository, times(1)).findByEmail(userDto.getEmail());
+        verify(userMapper, times(1)).toEntity(userDto);
+        verify(userRepository, times(1)).save(user);
+        verify(userMapper, times(1)).toDto(user);
     }
 
     @Test
@@ -59,13 +67,14 @@ class UserServiceImplTest {
     void saveEmailAlreadyExists() {
         UserDto userDto = TestUserFactory.createUserDto();
         User user = TestUserFactory.createUser();
-        when(userDaoImpl.findByEmail(userDto.getEmail())).thenReturn(Optional.of(user));
+
+        when(userRepository.findByEmail(userDto.getEmail())).thenReturn(Optional.of(user));
 
         assertThrows(EmailAlreadyExistsException.class,
-                () -> userService.save(userDto));
+                () -> userService.saveNewUser(userDto));
 
-        verify(userDaoImpl).findByEmail(userDto.getEmail());
-        verifyNoMoreInteractions(userDaoImpl);
+        verify(userRepository, times(1)).findByEmail(userDto.getEmail());
+        verifyNoMoreInteractions(userRepository);
         verifyNoMoreInteractions(userMapper);
     }
 
@@ -74,26 +83,25 @@ class UserServiceImplTest {
     void findByIdOk() {
         Long userId = TestUserFactory.USER_ID;
         LocalDateTime fixedTime = LocalDateTime.now();
-
         User user = TestUserFactory.createUser(fixedTime, userId);
         UserDto userDto = TestUserFactory.createUserDto(fixedTime, userId);
-        when(userDaoImpl.findById(userId)).thenReturn(Optional.of(user));
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(userMapper.toDto(user)).thenReturn(userDto);
 
         UserDto foundUser = userService.findById(userId);
 
-        assertAll("found user fields",
+        assertAll("found user",
                 () -> assertNotNull(foundUser),
                 () -> assertEquals(foundUser.getCreatedAt(), user.getCreatedAt()),
                 () -> assertEquals(foundUser.getAge(), user.getAge()),
-                () -> assertEquals(foundUser.getId(), user.getId()),
                 () -> assertEquals(foundUser.getName(), user.getName()),
                 () -> assertEquals(foundUser.getEmail(), user.getEmail())
         );
 
-        verify(userDaoImpl).findById(userId);
-        verify(userMapper).toDto(user);
-        verifyNoMoreInteractions(userDaoImpl);
+        verify(userRepository, times(1)).findById(userId);
+        verify(userMapper, times(1)).toDto(user);
+        verifyNoMoreInteractions(userRepository);
         verifyNoMoreInteractions(userMapper);
     }
 
@@ -101,88 +109,83 @@ class UserServiceImplTest {
     @DisplayName("findById - not found")
     void findByIdNotFound() {
         Long id = 999L;
-        when(userDaoImpl.findById(id)).thenReturn(Optional.ofNullable(null));
+        when(userRepository.findById(id)).thenReturn(Optional.ofNullable(null));
 
         assertThrows(UserNotFoundException.class,
                 () -> userService.findById(id));
 
-        verify(userDaoImpl).findById(id);
-        verifyNoMoreInteractions(userDaoImpl);
+        verify(userRepository, times(1)).findById(id);
+        verifyNoMoreInteractions(userRepository);
     }
 
     @Test
     @DisplayName("findAll - OK")
     void findAllOk() {
         List<User> users = TestUserFactory.createLisOfUsers(5);
-        when(userDaoImpl.findAll()).thenReturn(users);
+        when(userRepository.findAll()).thenReturn(users);
 
         List<UserDto> result = userService.findAll();
 
         assertThat(result).isNotEmpty();
         assertThat(result.size()).isEqualTo(users.size());
 
-        verify(userDaoImpl).findAll();
+        verify(userRepository, times(1)).findAll();
         verify(userMapper, times(5)).toDto(any());
-        verifyNoMoreInteractions(userDaoImpl);
+        verifyNoMoreInteractions(userRepository);
     }
 
     @Test
     @DisplayName("findAll - list is empty")
     void findAllListIsEmpty() {
-        when(userDaoImpl.findAll()).thenReturn(new ArrayList<>());
+        when(userRepository.findAll()).thenReturn(Collections.EMPTY_LIST);
 
         List<UserDto> users = userService.findAll();
 
         assertThat(users.isEmpty());
-        verify(userDaoImpl).findAll();
-        verifyNoMoreInteractions(userDaoImpl);
+        verify(userRepository, times(1)).findAll();
+        verifyNoMoreInteractions(userRepository);
     }
 
     @Test
     @DisplayName("update - OK")
     void updateOk() {
         Long userId = TestUserFactory.USER_ID;
-        UserDto userDto = TestUserFactory.createUserDto(userId);
+        UserDto userDto = TestUserFactory.createUserDto();
+        userDto.setName("newName");
         User user = TestUserFactory.createUser(userId);
-        when(userDaoImpl.findById(userId)).thenReturn(Optional.of(new User()));
-        when(userMapper.toEntity(userDto)).thenReturn(user);
 
-        userService.update(userDto);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-        verify(userDaoImpl).update(captor.capture());
+        userService.update(userId, userDto);
 
-        User updatedUser = captor.getValue();
-        assertThat(updatedUser.getName()).isEqualTo(userDto.getName());
-
-        verify(userDaoImpl).findById(userId);
-        verify(userDaoImpl).update(user);
-        verify(userMapper).toEntity(userDto);
-        verifyNoMoreInteractions(userDaoImpl);
-        verifyNoMoreInteractions(userMapper);
+        verify(userRepository, times(1)).findById(userId);
+        verifyNoMoreInteractions(userRepository);
     }
 
     @Test
     @DisplayName("update - user not found")
     void updateUserNotFound() {
+        Long userId = TestUserFactory.USER_ID;
         UserDto userDto = TestUserFactory.createUserDto();
 
-        assertThrows(UserNotFoundException.class,
-                () -> userService.update(userDto));
+        when(userRepository.findById(userId)).thenReturn(Optional.ofNullable(null));
 
-        verifyNoMoreInteractions(userDaoImpl);
-        verifyNoMoreInteractions(userMapper);
+        assertThrows(UserNotFoundException.class, () -> userService.update(userId, userDto));
+
+        verifyNoMoreInteractions(userRepository);
     }
 
     @Test
     @DisplayName("deleteById - OK")
     void deleteById() {
         Long userId = TestUserFactory.USER_ID;
+        User user = TestUserFactory.createUser(userId);
 
-        userService.deleteById(TestUserFactory.USER_ID);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
-        verify(userDaoImpl).deleteById(userId);
-        verifyNoMoreInteractions(userDaoImpl);
-        verifyNoMoreInteractions(userMapper);
+        userService.deleteById(userId);
+
+        verify(userRepository, times(1)).deleteById(userId);
+        verifyNoMoreInteractions(userRepository);
     }
 }

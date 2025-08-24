@@ -11,6 +11,8 @@ import java.time.LocalDateTime;
 @Data
 public class UserDto {
 
+    private Long id;
+
     @NotBlank(message = "name should be specified")
     @Size(min=3, max=20, message = "name size should be between 3 and 20 letters")
     private String name;
