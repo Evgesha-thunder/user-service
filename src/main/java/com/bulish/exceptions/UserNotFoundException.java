@@ -1,4 +1,4 @@
-package com.bulish.exception;
+package com.bulish.exceptions;
 
 public class UserNotFoundException extends RuntimeException {
     public UserNotFoundException(String message) {

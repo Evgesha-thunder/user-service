@@ -1,4 +1,4 @@
-package com.bulish.exception;
+package com.bulish.exceptions;
 
 public class EmailAlreadyExistsException extends RuntimeException {
     public EmailAlreadyExistsException(String message) {

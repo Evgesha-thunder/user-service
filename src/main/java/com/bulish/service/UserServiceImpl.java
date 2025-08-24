@@ -1,56 +1,100 @@
 package com.bulish.service;
 
-import com.bulish.dao.UserDao;
+import com.bulish.repository.UserRepository;
 import com.bulish.dto.UserDto;
-import com.bulish.exception.EmailAlreadyExistsException;
-import com.bulish.exception.UserNotFoundException;
+import com.bulish.exceptions.EmailAlreadyExistsException;
+import com.bulish.exceptions.UserNotFoundException;
 import com.bulish.mapper.UserMapper;
 import com.bulish.model.User;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
+@Slf4j
+@Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
 
-    private final UserDao userDao;
+    private final UserRepository userRepository;
     private final UserMapper userMapper;
 
     @Override
-    public Long save(UserDto userDto) {
-        if (userDao.findByEmail(userDto.getEmail()).isPresent()) {
-            throw new EmailAlreadyExistsException("Email " + userDto.getEmail() + " already in use");
-        }
+    @Transactional
+    public UserDto saveNewUser(UserDto userDto) {
+        log.info("saveNewUser triggered...");
+
+        userRepository.findByEmail(userDto.getEmail()).ifPresent(
+                user -> {
+                    log.error("duplicate email {}", userDto.getEmail());
+                    throw new EmailAlreadyExistsException("Email " + userDto.getEmail() + " already in use");
+                });
+
         User user = userMapper.toEntity(userDto);
-        return userDao.save(user);
+        user.setCreatedAt(LocalDateTime.now());
+        log.debug("new user created {}", user);
+
+        return userMapper.toDto(userRepository.save(user));
     }
 
     @Override
     public UserDto findById(Long id) {
-        Optional<User> user = userDao.findById(id);
+        log.info("findById triggered...");
 
-        return userMapper.toDto(user.orElseThrow(() ->
-                new UserNotFoundException("User not found in db with id " + id)
-        ));
+        return userRepository.findById(id)
+                .map(user -> {
+                    log.debug("Found user: {}", user);
+                    return userMapper.toDto(user);
+                })
+                .orElseThrow(() -> {
+                    log.error("User not found in db with id {}", id);
+                    return new UserNotFoundException("User not found with id: " + id);
+                });
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<UserDto> findAll() {
-        List<User> users = userDao.findAll();
+        log.info("findAll triggered...");
+        List<User> users = userRepository.findAll();
+        log.debug("Found users list size {}", users.size());
+
         return users.stream().map(userMapper::toDto).toList();
     }
 
+    @Transactional
     @Override
-    public void update(UserDto userDto) {
-        if (userDto.getId() == null || userDao.findById(userDto.getId()).isEmpty()) {
-            throw new UserNotFoundException("User with id " + userDto.getId() + " not found in db");
-        }
-        userDao.update(userMapper.toEntity(userDto));
+    public void update(Long id, UserDto userDto) {
+        log.info("update triggered...");
+
+        userRepository.findById(id).ifPresentOrElse(
+                user -> {
+                    log.debug("Found user: {}", user);
+                    userMapper.updateEntityFromDto(userDto, user);
+                },
+                () -> {
+                    log.error("User not found in db with id {}", id);
+                    throw new UserNotFoundException("User not found with id: " + id);
+                });
     }
 
+    @Transactional
     @Override
     public void deleteById(Long id) {
-        userDao.deleteById(id);
+        log.info("deleteById triggered...");
+        userRepository.findById(id).ifPresentOrElse(
+                user -> {
+                    log.debug("found user {}", user);
+                    userRepository.deleteById(id);
+                },
+                () -> {
+                    log.error("User not found in db with id {}", id);
+                    throw new UserNotFoundException("User with id " + id + " not found in db");
+                }
+        );
     }
 }
