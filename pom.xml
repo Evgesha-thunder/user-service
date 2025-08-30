@@ -18,6 +18,7 @@
   <properties>
     <java.version>21</java.version>
     <testcontainers.version>1.20.0</testcontainers.version>
+    <kafka.version>3.4.0</kafka.version>
   </properties>
 
   <dependencies>
@@ -65,6 +66,11 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>kafka-clients</artifactId>
+      <version>${kafka.version}</version>
     </dependency>
   </dependencies>
 

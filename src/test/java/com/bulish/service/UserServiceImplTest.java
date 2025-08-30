@@ -2,6 +2,7 @@ package com.bulish.service;
 
 import com.bulish.TestUserFactory;
 import com.bulish.dto.UserDto;
+import com.bulish.dto.UserOperation;
 import com.bulish.exceptions.EmailAlreadyExistsException;
 import com.bulish.exceptions.UserNotFoundException;
 import com.bulish.mapper.UserMapper;
@@ -33,14 +34,18 @@ class UserServiceImplTest {
     @Mock
     private UserMapper userMapper;
 
+    @Mock
+    private UserNotificationServiceImpl userNotificationService;
+
     @InjectMocks
     private UserServiceImpl userService;
 
     @Test
     @DisplayName("save new user - OK")
     void saveOk() {
-        User user = TestUserFactory.createUser();
-        UserDto userDto = TestUserFactory.createUserDto();
+        Long userId = TestUserFactory.USER_ID;
+        User user = TestUserFactory.createUser(userId);
+        UserDto userDto = TestUserFactory.createUserDto(userId);
 
         when(userRepository.findByEmail(userDto.getEmail())).thenReturn(Optional.empty());
         when(userMapper.toEntity(userDto)).thenReturn(user);
@@ -60,6 +65,7 @@ class UserServiceImplTest {
         verify(userMapper, times(1)).toEntity(userDto);
         verify(userRepository, times(1)).save(user);
         verify(userMapper, times(1)).toDto(user);
+        verify(userNotificationService, times(1)).sendUserEvent(UserOperation.CREATE, userDto);
     }
 
     @Test
@@ -180,12 +186,15 @@ class UserServiceImplTest {
     void deleteById() {
         Long userId = TestUserFactory.USER_ID;
         User user = TestUserFactory.createUser(userId);
+        UserDto userDto = TestUserFactory.createUserDto(userId);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userMapper.toDto(user)).thenReturn(userDto);
 
         userService.deleteById(userId);
 
         verify(userRepository, times(1)).deleteById(userId);
         verifyNoMoreInteractions(userRepository);
+        verify(userNotificationService, times(1)).sendUserEvent(UserOperation.DELETE, userDto);
     }
 }

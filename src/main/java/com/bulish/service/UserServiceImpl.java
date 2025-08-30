@@ -1,5 +1,6 @@
 package com.bulish.service;
 
+import com.bulish.dto.UserOperation;
 import com.bulish.repository.UserRepository;
 import com.bulish.dto.UserDto;
 import com.bulish.exceptions.EmailAlreadyExistsException;
@@ -22,6 +23,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final UserNotificationService notificationService;
 
     @Override
     @Transactional
@@ -38,7 +40,10 @@ public class UserServiceImpl implements UserService {
         user.setCreatedAt(LocalDateTime.now());
         log.debug("new user created {}", user);
 
-        return userMapper.toDto(userRepository.save(user));
+        UserDto savedUser = userMapper.toDto(userRepository.save(user));
+        notificationService.sendUserEvent(UserOperation.CREATE, savedUser);
+
+        return savedUser;
     }
 
     @Override
@@ -90,6 +95,7 @@ public class UserServiceImpl implements UserService {
                 user -> {
                     log.debug("found user {}", user);
                     userRepository.deleteById(id);
+                    notificationService.sendUserEvent(UserOperation.DELETE, userMapper.toDto(user));
                 },
                 () -> {
                     log.error("User not found in db with id {}", id);
