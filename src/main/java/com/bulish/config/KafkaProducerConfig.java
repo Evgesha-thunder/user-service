@@ -13,7 +13,7 @@ import java.util.Properties;
 @Configuration
 public class KafkaProducerConfig {
 
-    @Value("${kafka.server}")
+    @Value("${spring.kafka.bootstrap-servers}")
     private String serverAddress;
 
     @Value("${kafka.producer.retries:3}")
