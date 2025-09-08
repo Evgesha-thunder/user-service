@@ -1,0 +1,346 @@
+openapi: 3.0.3
+info:
+  title: User Service API
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Local server
+
+tags:
+  - name: users
+    description: All user operation
+paths:
+  /users:
+    post:
+      tags:
+        - users
+      summary: Create new user
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+              example:
+                id: 1
+                name: "Test test"
+                email: "test@example.com"
+                age: 25
+                createdAt: "2023-01-01T12:00:00Z"
+        '400':
+          description: Incorrect request format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                title: "Bad JSON request"
+                message: "JSON parse error: Unexpected character"
+                timestamp: "2023-01-01T12:00:00Z"
+                fieldErrors: null
+        '409':
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                title: "Email duplicate"
+                message: "Email test@example.com already in use"
+                timestamp: "2023-01-01T12:00:00Z"
+                fieldErrors: null
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                title: "Validation failed"
+                message: "Invalid request fields"
+                timestamp: "2023-01-01T12:00:00Z"
+                fieldErrors:
+                  email: "email should have valid structure example example@yandex.ru"
+                  name: "name size should be between 3 and 20 letters"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                title: "Internal Server Error"
+                message: "An unexpected error occurred"
+                timestamp: "2023-01-01T12:00:00Z"
+                fieldErrors: null
+    get:
+      tags:
+        - users
+      summary: Get all users
+      operationId: getAllUsers
+      responses:
+        '200':
+          description: List users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserDto'
+              example:
+                - id: 1
+                  name: "Test test"
+                  email: "test@example.com"
+                  age: 25
+                  createdAt: "2023-01-01T12:00:00Z"
+                - id: 2
+                  name: "Jenny Test"
+                  email: "jenny@example.com"
+                  age: 30
+                  createdAt: "2023-01-02T10:30:00Z"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                title: "Internal Server Error"
+                message: "An unexpected error occurred"
+                timestamp: "2023-01-01T12:00:00Z"
+                fieldErrors: null
+
+  /users/{id}:
+    get:
+      tags:
+        - users
+      summary: Get user by id
+      operationId: getUserById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+              example:
+                id: 1
+                name: "Test test"
+                email: "test@example.com"
+                age: 25
+                createdAt: "2023-01-01T12:00:00Z"
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                title: "User not found"
+                message: "User not found with id: 44"
+                timestamp: "2023-01-01T12:00:00Z"
+                fieldErrors: null
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                title: "Internal Server Error"
+                message: "An unexpected error occurred"
+                timestamp: "2023-01-01T12:00:00Z"
+                fieldErrors: null
+    put:
+      tags:
+        - users
+      summary: Update user
+      operationId: updateUser
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+      responses:
+        '204':
+          description: Updated
+        '400':
+          description: Invalid request format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                title: "Bad JSON request"
+                message: "JSON parse error: Unexpected character"
+                timestamp: "2023-01-01T12:00:00Z"
+                fieldErrors: null
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                title: "User not found"
+                message: "User not found with id: 44"
+                timestamp: "2023-01-01T12:00:00Z"
+                fieldErrors: null
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                title: "Validation failed"
+                message: "Invalid request fields"
+                timestamp: "2023-01-01T12:00:00Z"
+                fieldErrors:
+                  email: "email should have valid structure example example@yandex.ru"
+                  name: "name size should be between 3 and 20 letters"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                title: "Internal Server Error"
+                message: "An unexpected error occurred"
+                timestamp: "2023-01-01T12:00:00Z"
+                fieldErrors: null
+    delete:
+      tags:
+        - users
+      summary: Delete user
+      operationId: deleteUser
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                title: "User not found"
+                message: "User not found with id: 44"
+                timestamp: "2023-01-01T12:00:00Z"
+                fieldErrors: null
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                title: "Internal Server Error"
+                message: "An unexpected error occurred"
+                timestamp: "2023-01-01T12:00:00Z"
+                fieldErrors: null
+
+components:
+  schemas:
+    UserDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        name:
+          type: string
+          example: "Test test"
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        age:
+          type: integer
+          minimum: 7
+          maximum: 100
+          example: 25
+        createdAt:
+          type: string
+          format: date-time
+          example: "2023-01-01T12:00:00Z"
+      required:
+        - id
+        - name
+        - email
+        - age
+        - createdAt
+
+    UserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 20
+          example: "Test test"
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        age:
+          type: integer
+          minimum: 7
+          maximum: 100
+          example: 25
+      required:
+        - name
+        - email
+        - age
+
+    ErrorResponse:
+      type: object
+      properties:
+        title:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        fieldErrors:
+          type: object
+          nullable: true
+          additionalProperties:
+            type: string

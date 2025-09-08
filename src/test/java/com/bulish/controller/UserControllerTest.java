@@ -64,7 +64,7 @@ class UserControllerTest {
         mockMvc.perform(post("/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(user)))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.title").value(VALIDATION_TITLE))
                 .andExpect(jsonPath("$.fieldErrors.age").exists());
 
@@ -78,7 +78,7 @@ class UserControllerTest {
         mockMvc.perform(post("/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(user)))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.title").value(VALIDATION_TITLE))
                 .andExpect(jsonPath("$.fieldErrors.email").exists());
 
@@ -93,7 +93,7 @@ class UserControllerTest {
         mockMvc.perform(post("/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(user)))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.title").value(VALIDATION_TITLE))
                 .andExpect(jsonPath("$.fieldErrors.name").exists());
 

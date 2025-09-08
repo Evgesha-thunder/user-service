@@ -18,7 +18,7 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
     public ErrorResponse handleValidationException(MethodArgumentNotValidException ex) {
         log.error("MethodArgumentNotValidException occurred: {}", ex.getMessage(), ex);
 

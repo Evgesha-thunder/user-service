@@ -2,6 +2,7 @@ package com.bulish.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.*;
+import org.springframework.hateoas.RepresentationModel;
 
 import java.time.LocalDateTime;
 
@@ -9,7 +10,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 @Data
-public class UserDto {
+@EqualsAndHashCode(callSuper = false)
+public class UserDto extends RepresentationModel<UserDto> {
 
     private Long id;
 
